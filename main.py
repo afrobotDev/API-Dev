@@ -24,5 +24,7 @@ def get_data():
 
 @app.post("/posts")
 def create_post(post: Post):
-    print(post.model_dump())
-    return {"data": post.model_dump()}
+    post_dict = post.model_dump()
+    post_dict['id'] = len(my_posts) + 1
+    my_posts.append(post_dict)
+    return {"data": post_dict}
