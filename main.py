@@ -12,9 +12,15 @@ class Post(BaseModel):
     published: bool = True
     rating: Optional[int] = None
 
-@app.get("/")
+my_posts = [
+    {"title": "first post", "content": "it is first post", "id": 1},
+    {"title": "second post", "content": "it is the second", "id": 2},
+]
+
+
+@app.get("/posts")
 def get_data():
-    return {"message": "welcome to fastapi"}
+    return {"data": my_posts}
 
 @app.post("/posts")
 def create_post(post: Post):
