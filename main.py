@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 
@@ -19,5 +18,5 @@ def get_data():
 
 @app.post("/posts")
 def create_post(post: Post):
-    print(post.dict())
-    return {"data": post}
+    print(post.model_dump())
+    return {"data": post.model_dump()}
