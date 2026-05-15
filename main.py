@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
@@ -28,3 +28,11 @@ def create_post(post: Post):
     post_dict['id'] = len(my_posts) + 1
     my_posts.append(post_dict)
     return {"data": post_dict}
+
+
+@app.get("/posts/{id}")
+def get_post(id: int):
+    for post in my_posts:
+        if post["id"] == id:
+            return {"data": post}
+    raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
