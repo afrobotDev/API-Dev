@@ -22,6 +22,7 @@ my_posts = [
 def get_data():
     return {"data": my_posts}
 
+
 @app.post("/posts", status_code=201)
 def create_post(post: Post):
     post_dict = post.model_dump()
@@ -37,12 +38,24 @@ def get_post(id: int):
             return {"data": post}
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
+
 @app.delete("/posts/{id}", status_code=204)
 def delete_post(id: int):
     for i, post in enumerate(my_posts):
         if post['id'] == id:
             my_posts.pop(i)
             return
+    raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
+
+
+@app.put("/posts/{id}")
+def update_post(id: int, post: Post):
+    post_dict = post.model_dump()
+    post_dict['id'] = id
+    for i, existing in enumerate(my_posts):
+        if existing['id'] == id:
+            my_posts[i] = post_dict
+            return {"data": post_dict}
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
 
