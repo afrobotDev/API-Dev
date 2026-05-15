@@ -1,47 +1,56 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from app.database import my_posts
-from app.models import Post
+from app.database import get_db
+from app.db_models import Post as PostTable
+from app.models import PostCreate, PostResponse
 
 router = APIRouter()
 
 
 @router.get("/posts")
-def get_data():
-    return {"data": my_posts}
+def get_data(db: Session = Depends(get_db)):
+    posts = db.scalars(select(PostTable)).all()
+    return {
+        "data": [PostResponse.model_validate(post).model_dump() for post in posts]
+    }
 
 
 @router.post("/posts", status_code=201)
-def create_post(post: Post):
-    post_dict = post.model_dump()
-    post_dict["id"] = max((p["id"] for p in my_posts), default=0) + 1
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+def create_post(post: PostCreate, db: Session = Depends(get_db)):
+    new_post = PostTable(**post.model_dump())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    return {"data": PostResponse.model_validate(new_post).model_dump()}
 
 
 @router.get("/posts/{id}")
-def get_post(id: int):
-    for post in my_posts:
-        if post["id"] == id:
-            return {"data": post}
+def get_post(id: int, db: Session = Depends(get_db)):
+    post = db.get(PostTable, id)
+    if post is not None:
+        return {"data": PostResponse.model_validate(post).model_dump()}
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
 
 @router.delete("/posts/{id}", status_code=204)
-def delete_post(id: int):
-    for i, post in enumerate(my_posts):
-        if post["id"] == id:
-            my_posts.pop(i)
-            return
+def delete_post(id: int, db: Session = Depends(get_db)):
+    post = db.get(PostTable, id)
+    if post is not None:
+        db.delete(post)
+        db.commit()
+        return
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
 
 @router.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    post_dict = post.model_dump()
-    post_dict["id"] = id
-    for i, existing in enumerate(my_posts):
-        if existing["id"] == id:
-            my_posts[i] = post_dict
-            return {"data": post_dict}
+def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
+    existing = db.get(PostTable, id)
+    if existing is not None:
+        for field, value in post.model_dump().items():
+            setattr(existing, field, value)
+        db.commit()
+        db.refresh(existing)
+        return {"data": PostResponse.model_validate(existing).model_dump()}
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
