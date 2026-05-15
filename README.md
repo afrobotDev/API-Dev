@@ -1,9 +1,9 @@
 # FastAPI + PostgreSQL Setup
 
-## 1) Start PostgreSQL
+## 1) Start PostgreSQL (local service)
 
 ```bash
-docker compose up -d
+sudo systemctl start postgresql
 ```
 
 ## 2) Install dependencies
@@ -12,28 +12,16 @@ docker compose up -d
 uv sync
 ```
 
-## 3) Set database URL (optional)
+## 3) Create local env file (required)
 
-Default is already:
-
-`postgresql+psycopg://postgres:postgres@localhost:5432/coolstuff`
-
-If you want to override it:
-
-```bash
 cp .env.example .env
-```
 
-Run with env file:
+Edit `.env` and replace `<CHANGE_ME>` with your real Postgres password.
+
+## 4) Run app with env file
 
 ```bash
 uv run --env-file .env fastapi dev main.py
-```
-
-Or run with default env:
-
-```bash
-uv run fastapi dev main.py
 ```
 
 Tables are created automatically at app startup.
