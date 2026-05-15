@@ -22,7 +22,7 @@ my_posts = [
 def get_data():
     return {"data": my_posts}
 
-@app.post("/posts")
+@app.post("/posts", status_code=201)
 def create_post(post: Post):
     post_dict = post.model_dump()
     post_dict['id'] = len(my_posts) + 1
