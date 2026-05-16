@@ -11,4 +11,3 @@ class Post(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
     published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
