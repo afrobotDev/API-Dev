@@ -5,7 +5,6 @@ class PostBase(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: int | None = None
 
 
 class PostCreate(PostBase):
