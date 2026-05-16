@@ -1,5 +1,8 @@
-from sqlalchemy import Boolean, Integer, String
+from sqlalchemy import Boolean, Integer, String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime 
+
+
 
 from app.database import Base
 
@@ -11,3 +14,4 @@ class Post(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
     published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
