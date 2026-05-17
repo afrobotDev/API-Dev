@@ -12,9 +12,7 @@ router = APIRouter()
 @router.get("/posts")
 def get_data(db: Session = Depends(get_db)):
     posts = db.scalars(select(PostTable)).all()
-    return {
-        "data": [PostResponse.model_validate(post).model_dump() for post in posts]
-    }
+    return [PostResponse.model_validate(post).model_dump() for post in posts]
 
 
 @router.post("/posts", status_code=201)
@@ -23,14 +21,14 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": PostResponse.model_validate(new_post).model_dump()}
+    return PostResponse.model_validate(new_post).model_dump()
 
 
 @router.get("/posts/{id}")
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostTable, id)
     if post is not None:
-        return {"data": PostResponse.model_validate(post).model_dump()}
+        return PostResponse.model_validate(post).model_dump()
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
 
@@ -52,5 +50,5 @@ def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
             setattr(existing, field, value)
         db.commit()
         db.refresh(existing)
-        return {"data": PostResponse.model_validate(existing).model_dump()}
+        return PostResponse.model_validate(existing).model_dump()
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
