@@ -1,4 +1,4 @@
-# FastAPI + PostgreSQL Setup
+# FastAPI + PostgreSQL + Alembic
 
 ## 1) Start PostgreSQL (local service)
 
@@ -14,14 +14,48 @@ uv sync
 
 ## 3) Create local env file (required)
 
+```bash
 cp .env.example .env
+```
 
-Edit `.env` and replace `<CHANGE_ME>` with your real Postgres password.
+Edit `.env` and replace placeholders with your real values.
 
-## 4) Run app with env file
+## 4) Run migrations
+
+For a fresh database:
+
+```bash
+uv run --env-file .env alembic upgrade head
+```
+
+If your database already has the current schema (existing `posts` table from before Alembic):
+
+```bash
+uv run --env-file .env alembic stamp head
+```
+
+## 5) Run app
 
 ```bash
 uv run --env-file .env fastapi dev main.py
 ```
 
-Tables are created automatically at app startup.
+## Common migration commands
+
+Create a new migration (auto-detect model changes):
+
+```bash
+uv run --env-file .env alembic revision --autogenerate -m "describe change"
+```
+
+Apply latest migrations:
+
+```bash
+uv run --env-file .env alembic upgrade head
+```
+
+Rollback one revision:
+
+```bash
+uv run --env-file .env alembic downgrade -1
+```
