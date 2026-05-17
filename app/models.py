@@ -4,6 +4,7 @@ class PostBase(BaseModel):
     title: str
     content: str
     published: bool = True
+    description: str | None = None
 
 
 class PostCreate(PostBase):
