@@ -9,7 +9,7 @@ from app.models import UserCreate, UserResponse
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/users", tags=['Users'])
 
 
 @router.post("/", status_code=201)
