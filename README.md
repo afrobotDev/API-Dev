@@ -20,6 +20,12 @@ cp .env.example .env
 
 Edit `.env` and replace placeholders with your real values.
 
+Generate a `SECRET_KEY` for JWT signing:
+
+```bash
+openssl rand -hex 32
+```
+
 ## 4) Run migrations
 
 For a fresh database:
