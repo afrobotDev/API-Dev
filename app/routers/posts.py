@@ -5,7 +5,7 @@ from app.database import get_db
 from app.db_models import Post as PostTable
 from app.models import PostCreate, PostResponse
 
-router = APIRouter(prefix="/posts")
+router = APIRouter(prefix="/posts", tags=['Posts'])
 
 
 @router.get("/")
