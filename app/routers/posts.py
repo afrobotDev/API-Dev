@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
 from app.database import get_db
 from app.db_models import Post as PostTable
-from app.models import PostCreate, PostResponse
+from app.db_models import User as UserTable
+from app.models import PostCreate, PostResponse, UserCreate, UserResponse
 
 router = APIRouter()
 
@@ -52,3 +52,20 @@ def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
         db.refresh(existing)
         return PostResponse.model_validate(existing).model_dump()
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
+
+
+@router.post("/users", status_code=201)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    new_user = UserTable(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return UserResponse.model_validate(new_user).model_dump()
+
+
+@router.get("/users")
+def get_users(db: Session = Depends(get_db)):
+    users = db.scalars(select(UserTable)).all()
+    return [UserResponse.model_validate(user).model_dump() for user in users]
+
+
