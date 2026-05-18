@@ -20,8 +20,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-    @classmethod
     @field_validator("password")
+    @classmethod
     def password_length(cls, v: str) -> str:
         if len(v.encode("utf-8")) > 72:
             raise ValueError("password cannot exceed 72 bytes (bcrypt limit)")
