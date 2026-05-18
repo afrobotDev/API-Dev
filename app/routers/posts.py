@@ -4,28 +4,24 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.db_models import Post as PostTable
-from app.db_models import User as UserTable
 from app.models import PostCreate, PostResponse
 from app.oauth2 import get_current_user
 
-router = APIRouter(prefix="/posts", tags=["Posts"])
+router = APIRouter(
+    prefix="/posts",
+    tags=["Posts"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.get("/")
-def get_data(
-    db: Session = Depends(get_db),
-    current_user: UserTable = Depends(get_current_user),
-):
+def get_data(db: Session = Depends(get_db)):
     posts = db.scalars(select(PostTable)).all()
     return [PostResponse.model_validate(post).model_dump() for post in posts]
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_post(
-    post: PostCreate,
-    db: Session = Depends(get_db),
-    current_user: UserTable = Depends(get_current_user),
-):
+def create_post(post: PostCreate, db: Session = Depends(get_db)):
     new_post = PostTable(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -34,11 +30,7 @@ def create_post(
 
 
 @router.get("/{id}")
-def get_post(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: UserTable = Depends(get_current_user),
-):
+def get_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostTable, id)
     if post is not None:
         return PostResponse.model_validate(post).model_dump()
@@ -46,11 +38,7 @@ def get_post(
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: UserTable = Depends(get_current_user),
-):
+def delete_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostTable, id)
     if post is not None:
         db.delete(post)
@@ -60,12 +48,7 @@ def delete_post(
 
 
 @router.put("/{id}")
-def update_post(
-    id: int,
-    post: PostCreate,
-    db: Session = Depends(get_db),
-    current_user: UserTable = Depends(get_current_user),
-):
+def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
     existing = db.get(PostTable, id)
     if existing is not None:
         for field, value in post.model_dump().items():
