@@ -81,3 +81,16 @@ def get_users(db: Session = Depends(get_db)):
     return [UserResponse.model_validate(user).model_dump() for user in users]
 
 
+@router.get("/users/{id}")
+def get_user(id: int, db: Session = Depends(get_db)):
+    user = db.get(UserTable, id)
+    if user is not None:
+        return UserResponse.model_validate(user).model_dump()
+    raise HTTPException(status_code=404, detail=f"User with id {id} not found")
+
+
+
+
+
+
+
