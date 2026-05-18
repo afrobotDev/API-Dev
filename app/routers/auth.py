@@ -1,24 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.db_models import User as UserTable
+
 from app.database import get_db
-from app.models import UserResponse, UserLogin
+from app.db_models import User as UserTable
+from app.models import Token
+from app.oauth2 import create_access_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-router = APIRouter(tags=['Authentication'])
+router = APIRouter(tags=["Authentication"])
 
 
-@router.post("/login")
-def auth_user(user_info: UserLogin, db: Session = Depends(get_db)):
-    user = db.scalars(select(UserTable).where(UserTable.email == user_info.email)).first()
-    if not user or not pwd_context.verify(user_info.password, user.password):
+@router.post("/login", response_model=Token)
+def auth_user(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    user = db.scalars(
+        select(UserTable).where(UserTable.email == form_data.username)
+    ).first()
+    if not user or not pwd_context.verify(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid credentials",
         )
-    return UserResponse.model_validate(user).model_dump()
-
-
+    access_token = create_access_token(data={"sub": user.email})
+    return Token(access_token=access_token, token_type="bearer")
