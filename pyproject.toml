@@ -10,4 +10,5 @@ dependencies = [
     "pydantic>=2.13.4",
     "psycopg[binary]>=3.2.12",
     "sqlalchemy>=2.0.44",
+    "passlib[bcrypt]>=1.7.4",
 ]
