@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from datetime import datetime
 class PostBase(BaseModel):
     title: str
@@ -19,6 +19,15 @@ class PostResponse(PostBase):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+
+    @classmethod
+    @field_validator("password")
+    def password_length(cls, v: str) -> str:
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("password cannot exceed 72 bytes (bcrypt limit)")
+        if len(v) < 6:
+            raise ValueError("password must be at least 6 characters")
+        return v
 
 
 class UserResponse(BaseModel):
