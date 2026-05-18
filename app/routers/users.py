@@ -9,17 +9,17 @@ from app.models import UserCreate, UserResponse
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
 
-@router.post("/users", status_code=201)
+@router.post("/", status_code=201)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user_data = user.model_dump()
     user_data["password"] = pwd_context.hash(user_data["password"])
     new_user = UserTable(**user_data)
     try:
         db.add(new_user)
-        db.commit()
+        db.commit() 
         db.refresh(new_user)
     except IntegrityError:
         db.rollback()
@@ -29,13 +29,13 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return UserResponse.model_validate(new_user).model_dump()
 
 
-@router.get("/users")
+@router.get("/")
 def get_users(db: Session = Depends(get_db)):
     users = db.scalars(select(UserTable)).all()
     return [UserResponse.model_validate(user).model_dump() for user in users]
 
 
-@router.get("/users/{id}")
+@router.get("/{id}")
 def get_user(id: int, db: Session = Depends(get_db)):
     user = db.get(UserTable, id)
     if user is not None:
