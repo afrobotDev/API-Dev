@@ -5,16 +5,16 @@ from app.database import get_db
 from app.db_models import Post as PostTable
 from app.models import PostCreate, PostResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/posts")
 
 
-@router.get("/posts")
+@router.get("/")
 def get_data(db: Session = Depends(get_db)):
     posts = db.scalars(select(PostTable)).all()
     return [PostResponse.model_validate(post).model_dump() for post in posts]
 
 
-@router.post("/posts", status_code=201)
+@router.post("/", status_code=201)
 def create_post(post: PostCreate, db: Session = Depends(get_db)):
     new_post = PostTable(**post.model_dump())
     db.add(new_post)
@@ -23,7 +23,7 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     return PostResponse.model_validate(new_post).model_dump()
 
 
-@router.get("/posts/{id}")
+@router.get("/{id}")
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostTable, id)
     if post is not None:
@@ -31,7 +31,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
 
-@router.delete("/posts/{id}", status_code=204)
+@router.delete("/{id}", status_code=204)
 def delete_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostTable, id)
     if post is not None:
@@ -41,7 +41,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
 
-@router.put("/posts/{id}")
+@router.put("/{id}")
 def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
     existing = db.get(PostTable, id)
     if existing is not None:
