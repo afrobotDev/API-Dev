@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from passlib.context import CryptContext
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.db_models import Post as PostTable
@@ -62,9 +63,15 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user_data = user.model_dump()
     user_data["password"] = pwd_context.hash(user_data["password"])
     new_user = UserTable(**user_data)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409, detail="A user with this email already exists"
+        )
     return UserResponse.model_validate(new_user).model_dump()
 
 
