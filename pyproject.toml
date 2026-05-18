@@ -11,4 +11,5 @@ dependencies = [
     "psycopg[binary]>=3.2.12",
     "sqlalchemy>=2.0.44",
     "passlib[bcrypt]>=1.7.4",
+    "bcrypt==4.1.3",
 ]
