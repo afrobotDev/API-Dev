@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
+from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.db_models import Post as PostTable
 from app.db_models import User as UserTable
 from app.models import PostCreate, PostResponse, UserCreate, UserResponse
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
 
@@ -56,7 +59,9 @@ def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
 
 @router.post("/users", status_code=201)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    new_user = UserTable(**user.model_dump())
+    user_data = user.model_dump()
+    user_data["password"] = pwd_context.hash(user_data["password"])
+    new_user = UserTable(**user_data)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
