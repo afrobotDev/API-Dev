@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -8,8 +7,7 @@ from app.database import get_db
 from app.db_models import User as UserTable
 from app.models import UserCreate, UserResponse
 from app.oauth2 import get_current_user
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from app.security import pwd_context
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

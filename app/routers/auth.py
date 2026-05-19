@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -8,8 +7,7 @@ from app.database import get_db
 from app.db_models import User as UserTable
 from app.models import Token
 from app.oauth2 import create_access_token
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from app.security import pwd_context
 
 router = APIRouter(tags=["Authentication"])
 
