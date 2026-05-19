@@ -60,7 +60,7 @@ def update_post(id: int, post: PostCreate, db: Session = Depends(get_db), curren
     if existing is not None:
         if existing.owner_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this post")
-        for field, value in post.model_dump().items():
+        for field, value in post.model_dump(exclude_unset=True).items():
             setattr(existing, field, value)
         db.commit()
         db.refresh(existing)
