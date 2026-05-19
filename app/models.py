@@ -13,6 +13,7 @@ class PostCreate(PostBase):
 
 class PostResponse(PostBase):
     id: int
+    owner_id: int
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 

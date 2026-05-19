@@ -1,6 +1,6 @@
 from datetime import datetime
-from sqlalchemy import Boolean, DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
@@ -12,9 +12,13 @@ class Post(Base):
     content: Mapped[str] = mapped_column(String, nullable=False)
     published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
+    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    owner: Mapped["User"] = relationship(back_populates="posts")
+
 
 class User(Base):
     __tablename__ = "users"
@@ -25,3 +29,5 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    posts: Mapped[list["Post"]] = relationship(back_populates="owner")
