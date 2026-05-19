@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -16,8 +16,22 @@ router = APIRouter(
 
 
 @router.get("/")
-def get_data(db: Session = Depends(get_db)):
-    posts = db.scalars(select(PostTable)).all()
+def get_data(
+    db: Session = Depends(get_db),
+    limit: int = Query(default=10, ge=1, le=100, description="Number of posts to return"),
+    offset: int = Query(default=0, ge=0, description="Number of posts to skip"),
+    search: str | None = Query(default=None, description="Search in title and content"),
+):
+    query = select(PostTable)
+    if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        query = query.where(
+            PostTable.title.ilike(pattern, escape="\\")
+            | PostTable.content.ilike(pattern, escape="\\")
+        )
+    query = query.offset(offset).limit(limit)
+    posts = db.scalars(query).all()
     return [PostResponse.model_validate(post).model_dump() for post in posts]
 
 
