@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.db_models import Post as PostTable
+from app.db_models import User as UserTable
 from app.models import PostCreate, PostResponse
 from app.oauth2 import get_current_user
 
@@ -21,8 +22,12 @@ def get_data(db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_post(post: PostCreate, db: Session = Depends(get_db)):
-    new_post = PostTable(**post.model_dump())
+def create_post(
+    post: PostCreate,
+    db: Session = Depends(get_db),
+    current_user: UserTable = Depends(get_current_user),
+):
+    new_post = PostTable(owner_id=current_user.id, **post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -38,9 +43,11 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(get_db), current_user: UserTable = Depends(get_current_user)):
     post = db.get(PostTable, id)
     if post is not None:
+        if post.owner_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this post")
         db.delete(post)
         db.commit()
         return
@@ -48,9 +55,11 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}")
-def update_post(id: int, post: PostCreate, db: Session = Depends(get_db)):
+def update_post(id: int, post: PostCreate, db: Session = Depends(get_db), current_user: UserTable = Depends(get_current_user)):
     existing = db.get(PostTable, id)
     if existing is not None:
+        if existing.owner_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this post")
         for field, value in post.model_dump().items():
             setattr(existing, field, value)
         db.commit()
