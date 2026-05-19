@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, conint, field_validator
 from datetime import datetime
 class PostBase(BaseModel):
     title: str
@@ -45,3 +45,12 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+
+class Vote(BaseModel):
+    post_id: int
+    vote_dir: conint(le=1)
+
+
+
+
