@@ -31,3 +31,14 @@ class User(Base):
     )
 
     posts: Mapped[list["Post"]] = relationship(back_populates="owner")
+
+
+class Vote(Base):
+    __tablename__ = "votes"
+
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, nullable=False)
+
+
+
+
