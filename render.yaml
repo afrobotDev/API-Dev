@@ -1,10 +1,9 @@
 services:
   - type: web
     name: coolstuff-api
-    runtime: image
+    runtime: docker
     repo: https://github.com/afrobotDev/API-Dev 
     plan: free
-    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
