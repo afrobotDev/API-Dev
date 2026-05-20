@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.db_models import Post as PostTable
 from app.db_models import User as UserTable
+from app.db_models import Vote
 from app.models import PostCreate, PostResponse
 from app.oauth2 import get_current_user
 
@@ -22,7 +23,10 @@ def get_data(
     offset: int = Query(default=0, ge=0, description="Number of posts to skip"),
     search: str | None = Query(default=None, description="Search in title and content"),
 ):
-    query = select(PostTable)
+    query = select(
+        PostTable,
+        func.count(Vote.post_id).label("votes"),
+    ).outerjoin(Vote, Vote.post_id == PostTable.id).group_by(PostTable.id)
     if search:
         escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         pattern = f"%{escaped}%"
@@ -31,8 +35,11 @@ def get_data(
             | PostTable.content.ilike(pattern, escape="\\")
         )
     query = query.offset(offset).limit(limit)
-    posts = db.scalars(query).all()
-    return [PostResponse.model_validate(post).model_dump() for post in posts]
+    results = db.execute(query).all()
+    return [
+        PostResponse.model_validate({**post.__dict__, "votes": vote_count}).model_dump()
+        for post, vote_count in results
+    ]
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -45,14 +52,21 @@ def create_post(
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return PostResponse.model_validate(new_post).model_dump()
+    return PostResponse.model_validate({**new_post.__dict__, "votes": 0}).model_dump()
 
 
 @router.get("/{id}")
 def get_post(id: int, db: Session = Depends(get_db)):
-    post = db.get(PostTable, id)
-    if post is not None:
-        return PostResponse.model_validate(post).model_dump()
+    query = select(
+        PostTable,
+        func.count(Vote.post_id).label("votes"),
+    ).outerjoin(Vote, Vote.post_id == PostTable.id).where(
+        PostTable.id == id
+    ).group_by(PostTable.id)
+    result = db.execute(query).first()
+    if result is not None:
+        post, vote_count = result
+        return PostResponse.model_validate({**post.__dict__, "votes": vote_count}).model_dump()
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
 
 
@@ -78,7 +92,8 @@ def update_post(id: int, post: PostCreate, db: Session = Depends(get_db), curren
             setattr(existing, field, value)
         db.commit()
         db.refresh(existing)
-        return PostResponse.model_validate(existing).model_dump()
+        vote_count = db.scalar(select(func.count(Vote.post_id)).where(Vote.post_id == existing.id))
+        return PostResponse.model_validate({**existing.__dict__, "votes": vote_count or 0}).model_dump()
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
 
 
