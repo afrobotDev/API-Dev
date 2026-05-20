@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: coolstuff-api
+    runtime: image
+    repo: https://github.com/afrobotDev/API-Dev 
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: coolstuff-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue:
+          length: 64
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+
+databases:
+  - name: coolstuff-db
+    plan: free
+    databaseName: coolstuff
+    user: coolstuff
