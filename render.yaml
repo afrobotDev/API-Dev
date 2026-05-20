@@ -11,8 +11,7 @@ services:
           name: coolstuff-db
           property: connectionString
       - key: SECRET_KEY
-        generateValue:
-          length: 64
+        generateValue: true
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "30"
 
