@@ -15,6 +15,7 @@ class PostResponse(PostBase):
     id: int
     owner_id: int
     created_at: datetime
+    votes: int = 0
     model_config = ConfigDict(from_attributes=True)
 
 class UserCreate(BaseModel):
